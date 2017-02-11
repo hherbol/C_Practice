@@ -1,5 +1,12 @@
-#include <stdio.h>
+#ifdef LINUX
+#include <ncurses.h>
+#define OS 0
+#else
 #include <conio.h>
+#define OS 1
+#endif
+
+#include <stdio.h>
 #include <malloc.h>
 
 char* getInput(int** len){
@@ -29,20 +36,46 @@ char* getInput(int** len){
 
 	i = 0;
 
-	while ((buf[i++] = _getch()) != '\r'){
-		if (i == size){
-			// reallocate char.
-			tmp_buf = (char *)malloc(size * sizeof(char));
-			for (int j = 0; j < i; j++){
-				tmp_buf[j] = buf[j];
+	// Windows code
+	if (OS == 1){
+		printf("Running on Windows\n");
+		while ((buf[i++] = _getch()) != '\r'){
+			if (i == size){
+				// reallocate char.
+				tmp_buf = (char *)malloc(size * sizeof(char));
+				for (int j = 0; j < i; j++){
+					tmp_buf[j] = buf[j];
+				}
+				free(buf);
+				size += size_adj;
+				buf = (char *)malloc(size * sizeof(char));
+				for (int j = 0; j < i; j++){
+					buf[j] = tmp_buf[j];
+				}
+				free(tmp_buf);
 			}
-			free(buf);
-			size += size_adj;
-			buf = (char *)malloc(size * sizeof(char));
-			for (int j = 0; j < i; j++){
-				buf[j] = tmp_buf[j];
+		}
+	} else{
+		// LINUX code
+		printf("Running on LINUX\n");
+		while (1){
+			buf[i] = getch();
+			if (buf[i] == "\n") break;
+			i += 1;
+			if (i == size){
+				// reallocate char.
+				tmp_buf = (char *)malloc(size * sizeof(char));
+				for (int j = 0; j < i; j++){
+					tmp_buf[j] = buf[j];
+				}
+				free(buf);
+				size += size_adj;
+				buf = (char *)malloc(size * sizeof(char));
+				for (int j = 0; j < i; j++){
+					buf[j] = tmp_buf[j];
+				}
+				free(tmp_buf);
 			}
-			free(tmp_buf);
 		}
 	}
 
