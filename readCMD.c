@@ -1,4 +1,4 @@
-#ifdef LINUX
+#ifdef __linux__
 #include <ncurses.h>
 #define OS 0
 #else
@@ -10,88 +10,92 @@
 #include <malloc.h>
 
 char* getInput(int** len){
-	/*
-	This function reads in input from the command line (in windows) until return key is hit.
-	It then changes the given int** len to hold the length of the character array, and also
-	returns the character array.
+    /*
+    This function reads in input from the command line (in windows) until return key is hit.
+    It then changes the given int** len to hold the length of the character array, and also
+    returns the character array.
 
-	Call:
-	    char* buf;
-	    int* len;
-	    buf = getInput(&len);
-	    printf("Entered %d chars, chars = %s", *len, buf);
-	*/
-	int i;
-	int size;
-	int size_adj;
-	char* buf;
-	char* tmp_buf;
+    Call:
+        char* buf;
+        int* len;
+        buf = getInput(&len);
+        printf("Entered %d chars, chars = %s", *len, buf);
+    */
 
-	size = 20;
-	size_adj = 5;
+    int i;
+    int size;
+    int size_adj;
+    char* buf;
+    char* tmp_buf;
 
-	// Allocate memory to buffer
-	// Store buffer size
-	buf = (char *)malloc(size * sizeof(char));
+    size = 20;
+    size_adj = 5;
 
-	i = 0;
+    // Allocate memory to buffer
+    // Store buffer size
+    buf = (char *)malloc(size * sizeof(char));
 
-	// Windows code
-	if (OS == 1){
-		printf("Running on Windows\n");
-		while ((buf[i++] = _getch()) != '\r'){
-			if (i == size){
-				// reallocate char.
-				tmp_buf = (char *)malloc(size * sizeof(char));
-				for (int j = 0; j < i; j++){
-					tmp_buf[j] = buf[j];
-				}
-				free(buf);
-				size += size_adj;
-				buf = (char *)malloc(size * sizeof(char));
-				for (int j = 0; j < i; j++){
-					buf[j] = tmp_buf[j];
-				}
-				free(tmp_buf);
-			}
-		}
-	} else{
-		// LINUX code
-		printf("Running on LINUX\n");
-		while (1){
-			buf[i] = getch();
-			if (buf[i] == "\n") break;
-			i += 1;
-			if (i == size){
-				// reallocate char.
-				tmp_buf = (char *)malloc(size * sizeof(char));
-				for (int j = 0; j < i; j++){
-					tmp_buf[j] = buf[j];
-				}
-				free(buf);
-				size += size_adj;
-				buf = (char *)malloc(size * sizeof(char));
-				for (int j = 0; j < i; j++){
-					buf[j] = tmp_buf[j];
-				}
-				free(tmp_buf);
-			}
-		}
-	}
+    i = 0;
 
-	// Reallocate to only store just the right amount
-	size = i - 1;
-	buf = realloc(buf, size * sizeof(char));
-	buf[size] = '\0';
-	
-	*len = &size;
-	return buf;
+    // Windows code
+    if (OS == 1){
+        printf("Running on Windows\n");
+        while ((buf[i++] = _getch()) != '\r'){
+            if (i == size){
+                // reallocate char.
+                tmp_buf = (char *)malloc(size * sizeof(char));
+                for (int j = 0; j < i; j++){
+                    tmp_buf[j] = buf[j];
+                }
+                free(buf);
+                size += size_adj;
+                buf = (char *)malloc(size * sizeof(char));
+                for (int j = 0; j < i; j++){
+                    buf[j] = tmp_buf[j];
+                }
+                free(tmp_buf);
+            }
+        }
+    } else{
+        // LINUX code
+        printf("\nRunning on LINUX\n");
+        initscr();
+        cbreak();
+        noecho();
+        do {
+            buf[i] = getch();
+            if (i == size){
+                // reallocate char.
+                tmp_buf = (char *)malloc(size * sizeof(char));
+                for (int j = 0; j < i; j++){
+                    tmp_buf[j] = buf[j];
+                }
+                free(buf);
+                size += size_adj;
+                buf = (char *)malloc(size * sizeof(char));
+                for (int j = 0; j < i; j++){
+                    buf[j] = tmp_buf[j];
+                }
+                free(tmp_buf);
+            }
+            i += 1;
+        } while(buf[i-1] != '\n');
+        endwin();
+    }
+
+    // Reallocate to only store just the right amount
+    size = i - 1;
+    buf = realloc(buf, size * sizeof(char));
+    buf[size] = '\0';
+    
+    *len = &size;
+    return buf;
 }
 
 int main(){
     int* len;
-	char* buf;
+    char* buf;
     buf = getInput(&len);
     printf("Entered %d chars, chars = %s", *len, buf);
-	return 0;
+    return 0;
 }
